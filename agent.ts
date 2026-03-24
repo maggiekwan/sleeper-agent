@@ -2,15 +2,21 @@ import axios from 'axios';
 import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import { execSync } from 'child_process';
+
 
 dotenv.config();
+
+const tokens = JSON.parse(fs.readFileSync("tokens.json", "utf-8"));
+let { access_token, refresh_token, expires_at } = tokens;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 async function refreshAccessToken(): Promise<string> {
   const params = new URLSearchParams();
   params.append('grant_type', 'refresh_token');
-  params.append('refresh_token', process.env.WHOOP_REFRESH_TOKEN!);
+  params.append('refresh_token', refresh_token); // <-- use file token
   params.append('client_id', process.env.WHOOP_CLIENT_ID!);
   params.append('client_secret', process.env.WHOOP_CLIENT_SECRET!);
 
@@ -20,12 +26,26 @@ async function refreshAccessToken(): Promise<string> {
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
   );
 
-  // Save the new refresh token back to use next time
-  process.env.WHOOP_REFRESH_TOKEN = data.refresh_token;
-  process.env.WHOOP_ACCESS_TOKEN = data.access_token;
+  access_token = data.access_token;
+  refresh_token = data.refresh_token;
+  expires_at = Date.now() + data.expires_in * 1000;
 
-  return data.access_token;
+  // save to tokens.json
+  fs.writeFileSync(
+    "tokens.json",
+    JSON.stringify({ access_token, refresh_token, expires_at }, null, 2)
+  );
+
+  execSync("git config user.name 'sleeper-agent'");
+  execSync("git config user.email 'agent@github.com'");
+  execSync("git add tokens.json");
+  execSync('git commit -m "update tokens" || echo "no changes"');
+  execSync("git push");
+
+
+  return access_token;
 }
+
 
 async function getLastNightSleep(accessToken: string) {
   const { data } = await axios.get(
@@ -86,8 +106,13 @@ async function sendEmail(summary: string) {
 }
 
 async function run() {
-  console.log('Refreshing token...');
-  const accessToken = await refreshAccessToken();
+  let accessToken = access_token;
+
+  if (!accessToken || Date.now() > expires_at) {
+    console.log('Refreshing token...');
+    accessToken = await refreshAccessToken();
+  }
+
 
   console.log('Fetching sleep data...');
   const sleep = await getLastNightSleep(accessToken);
@@ -114,6 +139,11 @@ async function run() {
   console.log(`Sending email at: ${reminderTime.toLocaleTimeString('en-US', { timeZone: 'America/New_York' })}`);
   console.log(`Waiting ${Math.round(waitMs / 60000)} minutes...`);
 
+  // Guard against negative wait
+  if (waitMs > 0) {
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+  }
+  
   await new Promise(resolve => setTimeout(resolve, waitMs));
 
   console.log('Sending email...');
