@@ -16,6 +16,7 @@
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "libsodium-wrappers": "^0.8.3",
     "nodemailer": "^8.0.3",
     "npx": "^10.2.2",
     "ts-node": "^10.9.2",
@@ -23,6 +24,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@types/libsodium-wrappers": "^0.8.2",
     "@types/nodemailer": "^7.0.11"
   }
 }
