@@ -1,0 +1,13 @@
+{
+  "$schema": "https://jamdesk.com/docs.json",
+  "name": "My Docs",
+  "theme": "jam",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["introduction"]
+      }
+    ]
+  }
+}
