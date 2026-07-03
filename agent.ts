@@ -96,7 +96,21 @@ ${JSON.stringify(sleepData, null, 2)}`
     }]
   });
 
-  return (message.content[0] as any).text;
+  // Collect every text block, not just content[0] — the first block isn't
+  // guaranteed to be text (or non-empty).
+  const text = message.content
+    .filter((b: any) => b.type === 'text')
+    .map((b: any) => b.text)
+    .join('\n')
+    .trim();
+
+  if (!text) {
+    console.error('Empty summary from model. stop_reason:', message.stop_reason);
+    console.error('Raw content:', JSON.stringify(message.content));
+    throw new Error('Model returned no text; not sending an empty email.');
+  }
+
+  return text;
 }
 
 async function sendEmail(summary: string) {
