@@ -108,14 +108,19 @@ async function sendEmail(summary: string) {
     },
   });
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: process.env.BOYFRIEND_EMAIL,
     subject: `Bedtime reminder`,
     text: summary,
   });
 
-  console.log('Email sent!');
+  console.log('Email sent!', {
+    messageId: info.messageId,
+    accepted: info.accepted,
+    rejected: info.rejected,
+    response: info.response,
+  });
 }
 
 async function run() {
