@@ -2,7 +2,7 @@ name: Sleeper Agent
 
 on:
   schedule:
-    - cron: '0 18 * * *'  # 6pm UTC = 2pm ET
+    - cron: '40 2 * * *'  # 02:40 UTC = 10:40pm ET (EDT), 20 min before an 11pm bedtime
   workflow_dispatch:  # allows manual trigger for testing
 
 permissions:
@@ -23,7 +23,14 @@ jobs:
         env:
           WHOOP_CLIENT_ID: ${{ secrets.WHOOP_CLIENT_ID }}
           WHOOP_CLIENT_SECRET: ${{ secrets.WHOOP_CLIENT_SECRET }}
+          WHOOP_ACCESS_TOKEN: ${{ secrets.WHOOP_ACCESS_TOKEN }}
+          WHOOP_REFRESH_TOKEN: ${{ secrets.WHOOP_REFRESH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           BOYFRIEND_EMAIL: ${{ secrets.BOYFRIEND_EMAIL }}
+          # PAT with "Secrets: read and write" perms — used to rotate the
+          # Whoop tokens back into repo secrets. Can't be named GITHUB_* (reserved),
+          # so it's stored as GH_PAT and mapped to GITHUB_TOKEN here.
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_REPO: ${{ github.repository }}
