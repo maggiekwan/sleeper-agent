@@ -40,8 +40,11 @@ async function updateGithubSecret(name: string, value: string) {
     { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } }
   );
 
-  // GitHub requires secrets to be encrypted with libsodium
-  const sodium = await import('libsodium-wrappers');
+  // GitHub requires secrets to be encrypted with libsodium.
+  // Use the module's default export (the live sodium object) and await
+  // ready — the crypto primitives (e.g. crypto_box_seal) are only bound
+  // after the wasm module finishes initializing.
+  const sodium = (await import('libsodium-wrappers')).default;
   await sodium.ready;
   const binkey = sodium.from_base64(keyData.key, sodium.base64_variants.ORIGINAL);
   const binsec = sodium.from_string(value);
