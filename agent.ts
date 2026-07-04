@@ -135,6 +135,8 @@ async function sendEmail(summary: string) {
     rejected: info.rejected,
     response: info.response,
   });
+
+  transporter.close();
 }
 
 async function run() {
@@ -155,4 +157,11 @@ async function run() {
   await sendEmail(message);
 }
 
-run();
+// Exit explicitly once done, so lingering handles (SMTP/keep-alive sockets)
+// can't keep the Actions job alive after the email has been sent.
+run()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
