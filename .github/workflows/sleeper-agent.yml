@@ -2,7 +2,7 @@ name: Sleeper Agent
 
 on:
   schedule:
-    - cron: '8 1 * * *'  # 01:08 UTC = 06:08pm ET (EDT), ~2 hours before an 11pm bedtime
+    - cron: '8 1 * * *'  # 22:08 = 06:08pm ET (EDT), ~2 hours before an 11pm bedtime
   workflow_dispatch:  # allows manual trigger for testing
 
 permissions:
